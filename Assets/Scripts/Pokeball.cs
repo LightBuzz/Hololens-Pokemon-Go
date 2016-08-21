@@ -47,6 +47,7 @@ public class Pokeball : MonoBehaviour
     {
         ready = false;
 
+        transform.parent = null;
         Rigidbody.isKinematic = false;
         Rigidbody.velocity = velocity;
         Rigidbody.angularVelocity = angularVelocity;
@@ -97,6 +98,8 @@ public class Pokeball : MonoBehaviour
         }
         transform.rotation = Quaternion.Euler(Mathf.Lerp(eulerAngles.x, 0, 0.75f), Mathf.Lerp(eulerAngles.y, 180, 0.5f), 0);
 
+        yield return new WaitForSeconds(0.15f);
+
         hitPokemon.Capture(enterPoint);
 
         yield return new WaitUntil(() =>
@@ -115,6 +118,7 @@ public class Pokeball : MonoBehaviour
 
     public void ResetPokeball()
     {
+        transform.parent = Camera.main.transform;
         Rigidbody.isKinematic = true;
         transform.localPosition = startPosition;
         transform.localRotation = startRotation;
