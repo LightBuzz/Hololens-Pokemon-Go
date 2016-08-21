@@ -4,15 +4,12 @@ using UnityEngine.VR.WSA.Input;
 
 public class PlayerInput : MonoBehaviour
 {
-    public Pokemon pokemon;
-    public Transform initialPokemonPoint;
+    public Pokeball pokeball;
 
-    public Transform pokeball;
     public Vector3 forceLeft;
     public Vector3 forceRight;
 
-    bool shooting = false;
-    bool collidedWithPokemon = false;
+    bool canThrow = true;
 
 #if !UNITY_EDITOR
 
@@ -69,42 +66,24 @@ public class PlayerInput : MonoBehaviour
 
     private void Gr_TappedEvent(InteractionSourceKind source, int tapCount, Ray headRay)
     {
-        if (!shooting)
+        if (canThrow)
         {
-            pokeball.GetComponent<Rigidbody>().isKinematic = false;
-            pokeball.GetComponent<Rigidbody>().velocity = Vector3.Lerp(forceLeft, forceRight, Random.Range(0, 100) / 100f);
+            canThrow = false;
+
+            pokeball.Throw(Camera.main.transform.rotation * Vector3.Lerp(forceLeft, forceRight, Random.Range(0f, 1f)),
+                new Vector3(Random.Range(0f, 50f), Random.Range(-2f, 2f), Random.Range(-1f, 1f)));
 
             StartCoroutine(Coroutine_ReturnPokeball());
-
-            shooting = true;
         }
     }
 
     IEnumerator Coroutine_ReturnPokeball()
     {
-        yield return new WaitUntil(() => { return collidedWithPokemon; });
+        yield return new WaitUntil(() =>
+        {
+            return pokeball.ready;
+        });
 
-        pokemon.GetComponent<SphereCollider>().enabled = false;
-
-        yield return StartCoroutine(pokemon.Collect(pokeball));
-
-        yield return new WaitForSeconds(1);
-
-        pokeball.GetComponent<Rigidbody>().isKinematic = true;
-        pokeball.position = transform.position;
-        pokeball.rotation = transform.rotation;
-
-        pokemon.transform.position = initialPokemonPoint.position;
-        pokemon.transform.rotation = initialPokemonPoint.rotation;
-        pokemon.transform.localScale = initialPokemonPoint.localScale;
-        pokemon.GetComponent<SphereCollider>().enabled = true;
-
-        shooting = false;
-        collidedWithPokemon = false;
-    }
-
-    public void OnPokemonCollided()
-    {
-        collidedWithPokemon = true;
+        canThrow = true;
     }
 }
