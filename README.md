@@ -1,2 +1,1 @@
-# hololens-pokemon-go
-Pokemon Go Demo in HoloLens
+# Pokemon Go Clone for Microsoft HoloLens
