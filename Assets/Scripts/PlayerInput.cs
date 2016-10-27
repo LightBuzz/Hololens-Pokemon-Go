@@ -6,35 +6,35 @@ public class PlayerInput : MonoBehaviour
 {
     public Pokeball pokeball;
 
-    public Vector3 forceLeft;
-    public Vector3 forceRight;
+    public Vector3 throwForceLeft = new Vector3(-1, 4, 3.5f);
+    public Vector3 throwForceRight = new Vector3(1, 4, 3.5f);
 
-    bool canThrow = true;
+    bool canThrowPokeball = true;
 
 #if !UNITY_EDITOR
 
-    GestureRecognizer gr;
+    GestureRecognizer gestureRecognizer;
 
     void Awake()
     {
-        gr = new GestureRecognizer();
+        gestureRecognizer = new GestureRecognizer();
 
-        gr.SetRecognizableGestures(GestureSettings.Tap | GestureSettings.Hold | GestureSettings.ManipulationTranslate);
+        gestureRecognizer.SetRecognizableGestures(GestureSettings.Tap | GestureSettings.Hold | GestureSettings.ManipulationTranslate);
 
-        gr.TappedEvent += Gr_TappedEvent;
-        gr.HoldStartedEvent += Gr_HoldStartedEvent;
-        gr.HoldCanceledEvent += Gr_HoldCanceledEvent;
-        gr.HoldCompletedEvent += Gr_HoldCompletedEvent;
+        gestureRecognizer.TappedEvent += Gr_TappedEvent;
+        gestureRecognizer.HoldStartedEvent += Gr_HoldStartedEvent;
+        gestureRecognizer.HoldCanceledEvent += Gr_HoldCanceledEvent;
+        gestureRecognizer.HoldCompletedEvent += Gr_HoldCompletedEvent;
 
-        gr.StartCapturingGestures();
+        gestureRecognizer.StartCapturingGestures();
     }
 
     void OnDestroy()
     {
-        gr.TappedEvent -= Gr_TappedEvent;
-        gr.HoldStartedEvent -= Gr_HoldStartedEvent;
-        gr.HoldCanceledEvent -= Gr_HoldCanceledEvent;
-        gr.HoldCompletedEvent -= Gr_HoldCompletedEvent;
+        gestureRecognizer.TappedEvent -= Gr_TappedEvent;
+        gestureRecognizer.HoldStartedEvent -= Gr_HoldStartedEvent;
+        gestureRecognizer.HoldCanceledEvent -= Gr_HoldCanceledEvent;
+        gestureRecognizer.HoldCompletedEvent -= Gr_HoldCompletedEvent;
     }
 
 #else
@@ -66,12 +66,15 @@ public class PlayerInput : MonoBehaviour
 
     private void Gr_TappedEvent(InteractionSourceKind source, int tapCount, Ray headRay)
     {
-        if (canThrow)
+        if (canThrowPokeball)
         {
-            canThrow = false;
+            canThrowPokeball = false;
 
-            pokeball.Throw(Camera.main.transform.rotation * Vector3.Lerp(forceLeft, forceRight, Random.Range(0f, 1f)),
-                new Vector3(Random.Range(0f, 50f), Random.Range(-2f, 2f), Random.Range(-1f, 1f)));
+            Quaternion cameraRotation = Camera.main.transform.rotation;
+            Vector3 randomThrowForce = Vector3.Lerp(throwForceLeft, throwForceRight, Random.Range(0f, 1f));
+            Vector3 randomThrowAngularForce = new Vector3(Random.Range(0f, 50f), Random.Range(-2f, 2f), Random.Range(-1f, 1f));
+
+            pokeball.Throw(cameraRotation * randomThrowForce, randomThrowAngularForce);
 
             StartCoroutine(Coroutine_ReturnPokeball());
         }
@@ -79,11 +82,8 @@ public class PlayerInput : MonoBehaviour
 
     IEnumerator Coroutine_ReturnPokeball()
     {
-        yield return new WaitUntil(() =>
-        {
-            return pokeball.ready;
-        });
+        yield return new WaitUntil(() => { return pokeball.readyToThrow; });
 
-        canThrow = true;
+        canThrowPokeball = true;
     }
 }

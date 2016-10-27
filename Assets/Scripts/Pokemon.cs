@@ -3,56 +3,57 @@ using System.Collections;
 
 public class Pokemon : MonoBehaviour
 {
-    public float moveToPokeballSpeed = 2;
+    const float MOVE_TO_POKEBALL_SPEED = 3;
 
-    public bool IsBeingCaptured
+    Vector3 initialPosition;
+    Quaternion initialRotation;
+    Vector3 initialScale;
+
+    public bool CanBeCaptured
     {
         get;
         private set;
     }
 
-    Vector3 startPosition;
-    Quaternion startRotation;
-
     void Awake()
     {
-        startPosition = transform.localPosition;
-        startRotation = transform.localRotation;
+        initialPosition = transform.localPosition;
+        initialRotation = transform.localRotation;
+        initialScale = transform.localScale;
     }
 
-    public void Capture(Transform target)
+    public void Capture(Transform pokeball)
     {
-        IsBeingCaptured = true;
+        GetComponent<Collider>().enabled = false;
 
-        GetComponent<SphereCollider>().enabled = false;
-
-        StartCoroutine(Coroutine_Capture(target));
+        StartCoroutine(Coroutine_Capture(pokeball));
     }
 
-    IEnumerator Coroutine_Capture(Transform target)
+    IEnumerator Coroutine_Capture(Transform pokeball)
     {
+        CanBeCaptured = false;
+
         float delta = 0;
 
         while (delta < 1f)
         {
-            delta = Mathf.Min(1f, delta + Time.deltaTime * moveToPokeballSpeed);
+            delta = Mathf.Min(1f, delta + Time.deltaTime * MOVE_TO_POKEBALL_SPEED);
 
+            transform.position = Vector3.Lerp(initialPosition, pokeball.position, delta);
             transform.localScale = new Vector3(1f - delta, 1f - delta, 1f - delta);
-
-            transform.position = Vector3.Lerp(startPosition, target.position, delta);
 
             yield return null;
         }
 
-        IsBeingCaptured = false;
+        CanBeCaptured = true;
     }
 
     public void ResetPokemon()
     {
-        transform.localPosition = startPosition;
-        transform.localRotation = startRotation;
-        transform.localScale = Vector3.one;
+        transform.localPosition = initialPosition;
+        transform.localRotation = initialRotation;
+        transform.localScale = initialScale;
 
-        GetComponent<SphereCollider>().enabled = true;
+        GetComponent<Collider>().enabled = true;
     }
 }

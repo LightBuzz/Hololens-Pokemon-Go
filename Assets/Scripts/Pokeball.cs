@@ -3,28 +3,25 @@ using System.Collections;
 
 public class Pokeball : MonoBehaviour
 {
-    public Transform enterPoint;
+    /// <summary>
+    /// We don't have a real pokeball so it can't open for the pokemon to go in
+    /// </summary>
+    public Transform pokemonEnterPoint;
 
     Pokemon hitPokemon = null;
 
-    bool isWaitingBeforeCapture = false;
-    public bool ready = true;
+    [HideInInspector]
+    public bool readyToThrow = true;
+    bool isWaitingBeforePokemonCapture = false;
 
-    Rigidbody Rigidbody
-    {
-        get
-        {
-            return GetComponent<Rigidbody>();
-        }
-    }
-
-    Vector3 startPosition;
-    Quaternion startRotation;
+    new public Rigidbody rigidbody;
+    Vector3 initialPosition;
+    Quaternion initialRotation;
 
     void Awake()
     {
-        startPosition = transform.localPosition;
-        startRotation = transform.localRotation;
+        initialPosition = transform.localPosition;
+        initialRotation = transform.localRotation;
     }
 
     void OnCollisionEnter(Collision col)
@@ -38,19 +35,19 @@ public class Pokeball : MonoBehaviour
         {
             hitPokemon = col.transform.GetComponent<Pokemon>();
 
-            isWaitingBeforeCapture = true;
-            StartCoroutine(Coroutine_WaitAndCapture());
+            isWaitingBeforePokemonCapture = true;
+            StartCoroutine(Coroutine_CaptureSequence());
         }
     }
 
     public void Throw(Vector3 velocity, Vector3 angularVelocity)
     {
-        ready = false;
+        readyToThrow = false;
 
         transform.parent = null;
-        Rigidbody.isKinematic = false;
-        Rigidbody.velocity = velocity;
-        Rigidbody.angularVelocity = angularVelocity;
+        rigidbody.isKinematic = false;
+        rigidbody.velocity = velocity;
+        rigidbody.angularVelocity = angularVelocity;
 
         StartCoroutine(Coroutine_WaitForPokemonReset());
     }
@@ -61,10 +58,7 @@ public class Pokeball : MonoBehaviour
 
         if (hitPokemon != null)
         {
-            yield return new WaitUntil(() =>
-            {
-                return !isWaitingBeforeCapture;
-            });
+            yield return new WaitUntil(() => { return !isWaitingBeforePokemonCapture; });
 
             yield return new WaitForSeconds(1);
 
@@ -75,21 +69,21 @@ public class Pokeball : MonoBehaviour
         ResetPokeball();
     }
 
-    IEnumerator Coroutine_WaitAndCapture()
+    IEnumerator Coroutine_CaptureSequence()
     {
-        Vector3 lastVelocity = Rigidbody.velocity;
+        Vector3 lastVelocity = rigidbody.velocity;
         if (lastVelocity.z < 0)
         {
             lastVelocity.z = -lastVelocity.z;
         }
 
-        Rigidbody.velocity = lastVelocity;
+        rigidbody.velocity = lastVelocity;
         lastVelocity *= 0.5f;
-        Vector3 angularVelocity = Rigidbody.angularVelocity;
+        Vector3 angularVelocity = rigidbody.angularVelocity;
 
         yield return new WaitForSeconds(0.25f);
 
-        Rigidbody.isKinematic = true;
+        rigidbody.isKinematic = true;
 
         Vector3 eulerAngles = Quaternion.LookRotation(hitPokemon.transform.position - transform.position, Vector3.up).eulerAngles;
         if (eulerAngles.x > 180)
@@ -100,29 +94,26 @@ public class Pokeball : MonoBehaviour
 
         yield return new WaitForSeconds(0.15f);
 
-        hitPokemon.Capture(enterPoint);
+        hitPokemon.Capture(pokemonEnterPoint);
 
-        yield return new WaitUntil(() =>
-        {
-            return !hitPokemon.IsBeingCaptured;
-        });
+        yield return new WaitUntil(() => { return !hitPokemon.CanBeCaptured; });
 
         yield return new WaitForSeconds(0.5f);
 
-        Rigidbody.isKinematic = false;
-        Rigidbody.velocity = lastVelocity;
-        Rigidbody.angularVelocity = angularVelocity;
+        rigidbody.isKinematic = false;
+        rigidbody.velocity = lastVelocity;
+        rigidbody.angularVelocity = angularVelocity;
 
-        isWaitingBeforeCapture = false;
+        isWaitingBeforePokemonCapture = false;
     }
 
     public void ResetPokeball()
     {
         transform.parent = Camera.main.transform;
-        Rigidbody.isKinematic = true;
-        transform.localPosition = startPosition;
-        transform.localRotation = startRotation;
+        rigidbody.isKinematic = true;
+        transform.localPosition = initialPosition;
+        transform.localRotation = initialRotation;
 
-        ready = true;
+        readyToThrow = true;
     }
 }
