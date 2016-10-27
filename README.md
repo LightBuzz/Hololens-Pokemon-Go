@@ -8,6 +8,8 @@ Learn how to develop a Pokemon-Go clone application using Microsoft HoloLens. Th
 * [Read the step-by-step tutorial](http://lightbuzz.com/pokemon-go-hololens/)
 
 ## Contributors
-
 * Michael Miropoulos from [LightBuzz](http://lightbuzz.com)
 * Vangos Pterneas from [LightBuzz](http://lightbuzz.com) - Microsoft MVP
+
+## License
+You are free to use these libraries in personal and commercial projects by attributing the original creator of Vitruvius. Licensed under [Apache v2 License](https://github.com/LightBuzz/hololens-pokemon-go/blob/master/LICENSE).
